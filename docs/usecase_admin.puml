@@ -1,0 +1,183 @@
+@startuml usecase_admin
+left to right direction
+
+actor "Admin Boutique" as admin
+
+rectangle "ADMIN BOUTIQUE" {
+
+    usecase "S'authentifier" as AUTH
+
+    
+
+    rectangle "DASHBOARD" {
+
+        usecase "Voir statistiques" as VS
+
+        usecase "Ventes Comptant" as VC
+        usecase "Dettes à Récupérer" as DR
+        usecase "Volume Approvisionné" as VA
+        usecase "Valeur du Stock" as VST
+        usecase "Taux de Recouvrement" as TR
+        usecase "Panier Moyen" as PM
+
+        VS ..> VC : <<include>>
+        VS ..> DR : <<include>>
+        VS ..> VA : <<include>>
+        VS ..> VST : <<include>>
+        VS ..> TR : <<include>>
+        VS ..> PM : <<include>>
+
+        usecase "Ventes Récentes" as VR
+        usecase "Dettes du Jour" as DJ
+        usecase "Ruptures & Alertes" as RA
+
+        usecase "Livraisons du Jour" as LJ
+        usecase "Clients Débiteurs" as CD
+        usecase "Solde Fournisseurs" as SF
+    }
+
+    
+    rectangle "VENTES / POS" {
+
+        usecase "Enregistrer vente" as EV
+        usecase "Enregistrer vente à crédit" as EVC
+
+        usecase "Consulter registre des ventes" as CRV
+        usecase "Consulter détail d'une vente" as CDV
+
+        EVC ..> EV : <<extend>>
+        CDV ..> CRV : <<extend>>
+    }
+
+
+    rectangle "DETTES" {
+
+        usecase "Consulter statistiques des dettes" as CSD
+
+        usecase "Créances Actives" as CA
+        usecase "Clients Débiteurs" as CDB
+        usecase "Total Recouvrements" as TRC
+
+        CSD ..> CA : <<include>>
+        CSD ..> CDB : <<include>>
+        CSD ..> TRC : <<include>>
+
+        usecase "Consulter dettes clients" as CDC
+        usecase "Consulter articles d'une dette" as DD
+        usecase "Consulter paiements d'une dette" as PD
+
+        DD ..> CDC : <<extend>>
+        PD ..> CDC : <<extend>>
+
+        usecase "Rembourser une dette" as RD
+        usecase "Relancer client débiteur" as RCD
+
+        RD ..> DD : <<extend>>
+        RCD ..> CDB : <<extend>>
+    }
+
+    rectangle "APPROVISIONNEMENTS" {
+
+        usecase "Voir statistiques approvisionnements" as VSA
+
+        usecase "Coût Total des Entrées" as CTE
+        usecase "Bons de Réception" as BR
+        usecase "Fournisseurs Actifs" as FA
+
+        VSA ..> CTE : <<include>>
+        VSA ..> BR : <<include>>
+        VSA ..> FA : <<include>>
+
+        usecase "Consulter approvisionnements" as CAP
+        usecase "Consulter lignes de livraison" as CLL
+        usecase "Réceptionner livraison" as RL
+
+        CLL ..> CAP : <<extend>>
+        RL ..> CAP : <<extend>>
+    }
+
+  
+
+    rectangle "PRODUITS & TIERS" {
+
+        usecase "Consulter statistiques catalogue" as CSC
+
+        usecase "Valeur Totale du Stock" as VTS
+        usecase "Articles au Catalogue" as AC
+        usecase "Clients Enregistrés" as CE
+
+        CSC ..> VTS : <<include>>
+        CSC ..> AC : <<include>>
+        CSC ..> CE : <<include>>
+
+        usecase "Gérer produits" as GP
+        usecase "Enregistrer produit" as EP
+        usecase "Consulter produits" as CP
+
+        EP ..> GP : <<extend>>
+        CP ..> GP : <<extend>>
+
+        usecase "Gérer clients" as GC
+        usecase "Enregistrer client" as EC
+        usecase "Consulter clients" as CCL
+
+        EC ..> GC : <<extend>>
+        CCL ..> GC : <<extend>>
+
+        usecase "Gérer fournisseurs" as GF
+        usecase "Enregistrer fournisseur" as EF
+        usecase "Consulter fournisseurs" as CF
+
+        EF ..> GF : <<extend>>
+        CF ..> GF : <<extend>>
+    }
+
+  
+    admin --> VS
+    admin --> VR
+    admin --> DJ
+    admin --> RA
+    admin --> LJ
+    admin --> CD
+    admin --> SF
+
+    admin --> EV
+    admin --> CRV
+
+    admin --> CSD
+    admin --> CDC
+    admin --> RD
+    admin --> RCD
+
+    admin --> VSA
+    admin --> CAP
+    admin --> RL
+
+    admin --> CSC
+    admin --> GP
+    admin --> GC
+    admin --> GF
+
+    VS ..> AUTH : <<include>>
+    VR ..> AUTH : <<include>>
+    DJ ..> AUTH : <<include>>
+    RA ..> AUTH : <<include>>
+    LJ ..> AUTH : <<include>>
+    CD ..> AUTH : <<include>>
+    SF ..> AUTH : <<include>>
+    EV ..> AUTH : <<include>>
+    CRV ..> AUTH : <<include>>
+    CSD ..> AUTH : <<include>>
+    CDC ..> AUTH : <<include>>
+    RD ..> AUTH : <<include>>
+    RCD ..> AUTH : <<include>>
+    VSA ..> AUTH : <<include>>
+    CAP ..> AUTH : <<include>>
+    RL ..> AUTH : <<include>>
+    CSC ..> AUTH : <<include>>
+    GP ..> AUTH : <<include>>
+    GC ..> AUTH : <<include>>
+    GF ..> AUTH : <<include>>
+}
+
+@enduml

@@ -1,0 +1,59 @@
+@startuml usecase_inventaire
+left to right direction
+
+actor "Inventaire" as inventaire
+
+rectangle "INVENTAIRE" {
+
+    usecase "S'authentifier" as AUTH
+
+
+    rectangle "PRODUITS & TIERS" {
+
+        usecase "Consulter statistiques catalogue" as CSC
+
+        usecase "Valeur Totale du Stock" as VTS
+        usecase "Articles au Catalogue" as AC
+        usecase "Clients Enregistrés" as CE
+
+        CSC ..> VTS : <<include>>
+        CSC ..> AC : <<include>>
+        CSC ..> CE : <<include>>
+
+        usecase "Gérer produits" as GP
+        usecase "Enregistrer produit" as EP
+        usecase "Consulter produits" as CP
+
+        EP ..> GP : <<extend>>
+        CP ..> GP : <<extend>>
+
+        usecase "Gérer clients" as GC
+        usecase "Enregistrer client" as EC
+        usecase "Consulter clients" as CCL
+
+        EC ..> GC : <<extend>>
+        CCL ..> GC : <<extend>>
+
+        usecase "Gérer fournisseurs" as GF
+        usecase "Enregistrer fournisseur" as EF
+        usecase "Consulter fournisseurs" as CF
+
+        EF ..> GF : <<extend>>
+        CF ..> GF : <<extend>>
+    }
+
+
+
+    inventaire --> CSC
+    inventaire --> GP
+    inventaire --> GC
+    inventaire --> GF
+
+    
+    CSC ..> AUTH : <<include>>
+    GP ..> AUTH : <<include>>
+    GC ..> AUTH : <<include>>
+    GF ..> AUTH : <<include>>
+}
+
+@enduml

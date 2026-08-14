@@ -1,0 +1,71 @@
+@startuml usecase_vente
+left to right direction
+
+actor "Chargé de Vente" as vente
+
+rectangle "CHARGÉ DE VENTE" {
+
+    usecase "S'authentifier" as AUTH
+
+   
+
+    rectangle "VENTES / POS" {
+
+        usecase "Enregistrer vente" as EV
+        usecase "Enregistrer vente à crédit" as EVC
+
+        usecase "Consulter registre des ventes" as CRV
+        usecase "Consulter détail d'une vente" as CDV
+
+        EVC ..> EV : <<extend>>
+        CDV ..> CRV : <<extend>>
+    }
+
+   
+
+    rectangle "DETTES" {
+
+        usecase "Consulter statistiques des dettes" as CSD
+
+        usecase "Créances Actives" as CA
+        usecase "Clients Débiteurs" as CDB
+        usecase "Total Recouvrements" as TRC
+
+        CSD ..> CA : <<include>>
+        CSD ..> CDB : <<include>>
+        CSD ..> TRC : <<include>>
+
+        usecase "Consulter dettes clients" as CDC
+        usecase "Consulter articles d'une dette" as DD
+        usecase "Consulter paiements d'une dette" as PD
+
+        DD ..> CDC : <<extend>>
+        PD ..> CDC : <<extend>>
+
+        usecase "Rembourser une dette" as RD
+        usecase "Relancer client débiteur" as RCD
+
+        RD ..> DD : <<extend>>
+        RCD ..> CDB : <<extend>>
+    }
+
+    
+
+    vente --> EV
+    vente --> CRV
+    vente --> CSD
+    vente --> CDC
+    vente --> RD
+    vente --> RCD
+
+
+
+    EV ..> AUTH : <<include>>
+    CRV ..> AUTH : <<include>>
+    CSD ..> AUTH : <<include>>
+    CDC ..> AUTH : <<include>>
+    RD ..> AUTH : <<include>>
+    RCD ..> AUTH : <<include>>
+}
+
+@enduml

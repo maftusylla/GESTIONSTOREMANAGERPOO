@@ -1,0 +1,86 @@
+@startuml usecase_stock
+left to right direction
+
+actor "Chargé de Stock" as stock
+
+rectangle "CHARGÉ DE STOCK" {
+
+    usecase "S'authentifier" as AUTH
+
+
+    rectangle "APPROVISIONNEMENTS" {
+
+        usecase "Voir statistiques approvisionnements" as VSA
+
+        usecase "Coût Total des Entrées" as CTE
+        usecase "Bons de Réception" as BR
+        usecase "Fournisseurs Actifs" as FA
+
+        VSA ..> CTE : <<include>>
+        VSA ..> BR : <<include>>
+        VSA ..> FA : <<include>>
+
+        usecase "Consulter approvisionnements" as CAP
+        usecase "Consulter lignes de livraison" as CLL
+        usecase "Réceptionner livraison" as RL
+
+        CLL ..> CAP : <<extend>>
+        RL ..> CAP : <<extend>>
+    }
+
+   
+
+    rectangle "PRODUITS & TIERS" {
+
+        usecase "Consulter statistiques catalogue" as CSC
+
+        usecase "Valeur Totale du Stock" as VTS
+        usecase "Articles au Catalogue" as AC
+        usecase "Clients Enregistrés" as CE
+
+        CSC ..> VTS : <<include>>
+        CSC ..> AC : <<include>>
+        CSC ..> CE : <<include>>
+
+        usecase "Gérer produits" as GP
+        usecase "Enregistrer produit" as EP
+        usecase "Consulter produits" as CP
+
+        EP ..> GP : <<extend>>
+        CP ..> GP : <<extend>>
+
+        usecase "Gérer clients" as GC
+        usecase "Enregistrer client" as EC
+        usecase "Consulter clients" as CCL
+
+        EC ..> GC : <<extend>>
+        CCL ..> GC : <<extend>>
+
+        usecase "Gérer fournisseurs" as GF
+        usecase "Enregistrer fournisseur" as EF
+        usecase "Consulter fournisseurs" as CF
+
+        EF ..> GF : <<extend>>
+        CF ..> GF : <<extend>>
+    }
+
+    
+
+    stock --> VSA
+    stock --> CAP
+    stock --> RL
+    stock --> CSC
+    stock --> GP
+    stock --> GC
+    stock --> GF
+
+    VSA ..> AUTH : <<include>>
+    CAP ..> AUTH : <<include>>
+    RL ..> AUTH : <<include>>
+    CSC ..> AUTH : <<include>>
+    GP ..> AUTH : <<include>>
+    GC ..> AUTH : <<include>>
+    GF ..> AUTH : <<include>>
+}
+
+@enduml
