@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-require_once dirname(__DIR__) . '/Core/Session.php';
 require_once dirname(__DIR__) . '/Repository/ClientRepository.php';
 require_once dirname(__DIR__) . '/Repository/ProduitRepository.php';
 require_once dirname(__DIR__) . '/Repository/CommandeRepository.php';

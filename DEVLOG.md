@@ -1490,5 +1490,16 @@ Le contrôleur assure ainsi la gestion HTTP et du panier, tandis que VenteServic
 
 
 
+##vue
+
+### Devlog — Adaptation de la vue POS
+
+* Adaptation de la vue POS à l’architecture POO en conservant **la structure HTML, le CSS et les emplacements de l’interface originale**.
+* Rendu dynamique des **produits, clients, panier et commandes** à partir des données transmises par `POSController`.
+* Remplacement de l’ancien panier JavaScript par le **panier stocké temporairement en session PHP**.
+* Ajout des formulaires `POST` pour **ajouter un produit au panier** et **valider une commande**.
+* Affichage dynamique du **total du panier**, des informations client et du registre des ventes.
+* Gestion de l’affichage des **messages d’erreur et de confirmation** après les opérations.
+* Les éléments non encore pris en charge par les repositories/services ont été laissés de côté afin de **ne pas inventer de fonctionnalités**.
 
 
