@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-final class Paiement
+ class Paiement
 {
     private int $id;
     private int $detteId;

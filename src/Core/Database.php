@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-final class Database
+ class Database
 {
     private static ?Database $instance = null;
 

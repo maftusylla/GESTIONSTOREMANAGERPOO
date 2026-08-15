@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-final class LigneApprovisionnement
+ class LigneApprovisionnement
 {
     private int $id;
     private int $approvisionnementId;

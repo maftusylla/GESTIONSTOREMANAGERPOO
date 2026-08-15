@@ -852,7 +852,7 @@ La classe Database fonctionne maintenant comme prévu au départ : connexion Pos
 
 
 
-## Création des entités POO avec encapsulation et méthodes métier
+## DEBUT PHASE 2 Création des entités POO avec encapsulation et méthodes métier
 
 Cette étape consiste à mettre en place les principales entités métier du projet StoreManagerPro en programmation orientée objet.
 
@@ -1014,3 +1014,181 @@ des propriétés encapsulées ;
 des méthodes d'accès lorsque nécessaires ;
 les méthodes métier déjà définies pour son domaine.
 Résultat de l'étape
+
+
+### 📌 Step 2.2 (11h00 - 13h00) : Repositories & SQL Sécurisé
+
+**Heure de réalisation** : 11h-13h
+
+*Ce qui a été fait** :
+
+Création de `ProduitRepository.php`, `ClientRepository.php` et `FournisseurRepository.php` dans `src/Model/Repository/` (même logique de dossier que `Model/Entity`, puisque le planning ne précisait pas d'emplacement pour les Repositories).
+
+Chaque Repository :
+- passe systématiquement par `Database::executeQuery()` / `executeUpdate()` avec des paramètres nommés (`:id`, `:clientId`...) — aucune concaténation de variable dans le SQL, pour respecter l'exigence de requêtes préparées PDO de la charte ;
+- possède `findById(int $id)` et `findAll()` ;
+- `ClientRepository` a en plus `calculerEncoursDettes(int $clientId)`, qui calcule la somme des `montant_restant` de toutes les dettes d'un client (jointure `dette` / `commande`). Cette méthode n'est pas un ajout gratuit : elle correspond exactement au paramètre `$encoursDettesActuel` attendu par `Client::peutObtenirCredit()`, créée à l'étape précédente ;
+- `ProduitRepository` a en plus `decrementerStock(int $produitId, int $quantite)`, avec une clause `WHERE quantite_stock >= :quantiteMinimale` pour empêcher le stock de devenir négatif directement au niveau SQL.
+
+
+Cette étape consiste à mettre en place la couche Repository afin de séparer l'accès aux données de la logique métier des entités.
+
+src/
+└── Repository/
+    ├── ProduitRepository.php
+    ├── ClientRepository.php
+    └── FournisseurRepository.php
+
+Les repositories utilisent la classe Database déjà mise en place pour centraliser les accès PDO.
+
+Connexion à la base de données
+
+Chaque repository conserve une instance privée de Database :
+
+private Database $db;
+
+L'instance est récupérée dans le constructeur :
+
+public function __construct()
+{
+    $this->db = Database::getInstance();
+}
+
+Cela permet aux repositories de réutiliser la connexion centralisée sans créer directement une nouvelle connexion PDO.
+
+ProduitRepository
+
+Le repository des produits permet de récupérer un produit par son identifiant :
+
+public function findById(int $id): ?Produit
+
+La requête utilise un paramètre nommé :
+
+SELECT id, nom, prix_vente, quantite_stock
+FROM produit
+WHERE id = :id
+
+Le paramètre est ensuite fourni séparément :
+
+['id' => $id]
+
+Le résultat SQL est transformé en objet Produit :
+
+return new Produit(
+    (int) $ligne['id'],
+    (string) $ligne['nom'],
+    (float) $ligne['prix_vente'],
+    (int) $ligne['quantite_stock']
+);
+
+Le repository propose également :
+
+findAll()
+
+pour récupérer tous les produits triés par nom.
+
+Enfin, une opération spécifique permet de décrémenter le stock :
+
+decrementerStock(int $produitId, int $quantite): int
+
+La requête vérifie directement que le stock disponible est suffisant :
+
+UPDATE produit
+SET quantite_stock = quantite_stock - :quantiteADecrementer
+WHERE id = :id
+  AND quantite_stock >= :quantiteMinimale
+
+Cette opération retourne le nombre de lignes modifiées.
+
+ClientRepository
+
+Le ClientRepository permet de récupérer un client par son identifiant :
+
+findById(int $id): ?Client
+
+La requête utilise également une requête préparée avec :
+
+WHERE id = :id
+
+Le résultat est ensuite converti en objet Client.
+
+Le repository fournit également :
+
+findAll()
+
+pour récupérer l'ensemble des clients, avec un tri par nom puis prénom.
+
+Une méthode spécifique a également été ajoutée pour calculer l'encours des dettes d'un client :
+
+calculerEncoursDettes(int $clientId): float
+
+Cette méthode utilise une agrégation SQL :
+
+SELECT COALESCE(SUM(d.montant_restant), 0) AS encours
+FROM dette d
+INNER JOIN commande c ON c.id = d.commande_id
+WHERE c.client_id = :clientId
+
+Elle permet donc de récupérer directement le montant restant des dettes associées aux commandes du client.
+
+FournisseurRepository
+
+Le FournisseurRepository suit la même organisation.
+
+Il permet de récupérer un fournisseur avec :
+
+findById(int $id): ?Fournisseur
+
+et tous les fournisseurs avec :
+
+findAll()
+
+Les données SQL sont transformées en objets Fournisseur.
+
+Les champs optionnels comme telephone, adresse et email sont correctement traités lorsqu'ils contiennent NULL.
+
+Requêtes préparées PDO
+
+Les requêtes utilisent des paramètres nommés au lieu de concaténer directement les valeurs dans les chaînes SQL.
+
+Exemple :
+
+$this->db->executeQuery(
+    'SELECT id, nom, prix_vente, quantite_stock
+     FROM produit
+     WHERE id = :id',
+    ['id' => $id]
+);
+
+
+
+Les repositories ne créent donc pas directement leurs propres connexions PDO et ne contiennent pas de SQL construit par concaténation de paramètres.
+
+Transformation SQL → Entités
+
+Un rôle important des repositories est de faire le lien entre :
+
+Base de données
+      
+résultat SQL
+      
+Repository
+      
+Objet métier
+      
+Entity
+
+
+
+
+
+
+
+**Difficultés / Obstacles** :
+
+Ma première question a été : pourquoi PDO renvoie un tableau associatif (`$ligne['id']`) et pas directement un objet ? J'ai regardé `configurePDO()` dans `Database.php` : le mode `PDO::FETCH_ASSOC` est fixé explicitement, donc PDO ne renvoie jamais de `stdClass` ni d'objet  seulement des tableaux.
+
+Pour transformer ce tableau en objet, j'ai d'abord construit `new Produit(...)` directement dans `findById()` **et** dans `findAll()`
+
+J'ai aussi vérifié une alternative : `PDO::FETCH_CLASS`, qui permettrait à PDO de construire l'objet directement sans passer par un tableau. Je l'ai écartée : ce mode appelle le constructeur sans aucun argument après avoir rempli les propriétés par réflexion, ce qui m'aurait obligée à rendre tous les paramètres de mes constructeurs optionnels (`int $id = 0`, etc.)
+

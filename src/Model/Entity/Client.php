@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 
-final class Client
+class Client
 {
     private int $id;
     private string $prenom;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-final class LigneCommande
+ class LigneCommande
 {
     private int $id;
     private int $commandeId;

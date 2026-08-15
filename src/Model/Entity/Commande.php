@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-final class Commande
+ class Commande
 {
     private int $id;
     private int $clientId;

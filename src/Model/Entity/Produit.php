@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-final class Produit
+ class Produit
 {
     private int $id;
     private string $nom;
