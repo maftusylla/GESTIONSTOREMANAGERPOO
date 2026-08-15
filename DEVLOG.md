@@ -753,9 +753,6 @@ j'ai fais des modifications dans mes fichier schema.sql et shema_sqlite.sql pour
 #### 📌 Step 1.3 (22h00 - 23h00) : Singleton Database & Fallback Automatique
 
 **Ce qui a été fait** :
-j'ai fais des modifications dans mon fichier Database.php apres avoir tester ,je viens parfaire mon fichier avec les fonctions query,executeQuery,executeUpdate,prepare qui manquer 
-
-Voici un résumé que tu peux mettre directement dans ton **devlog** :
 
 # Migration et amélioration de la gestion de la base de données
 
@@ -827,3 +824,33 @@ Cette évolution prépare également le projet à une architecture plus propre b
 Database → Repository → Service → Controller
 
 Cette architecture pourra ensuite être appliquée aux différents modules, notamment les commandes, les paiements, les dettes, les approvisionnements et la gestion des produits.
+
+
+##  Finalisation de la classe Database
+Après avoir testé ma version avec DB_DRIVER (qui permettait de choisir explicitement PostgreSQL ou SQLite), j'ai remarqué en la testant que le fallback automatique ne fonctionnait plus. Si PostgreSQL n'était pas disponible et que DB_DRIVER=pgsql était défini, l'application plantait carrément avec une exception au lieu de basculer sur SQLite comme prévu au départ.
+
+J'ai donc remis en place le vrai fallback automatique, tout en gardant les méthodes que j'avais ajoutées.
+
+Ce qui a changé
+
+Le constructeur ne choisit plus le moteur à partir de DB_DRIVER. Il essaie maintenant toujours PostgreSQL en premier, et si ça échoue, il bascule automatiquement sur SQLite, sans que j'aie besoin de configurer quoi que ce soit. J'ai aussi ajouté un deuxième try/catch autour de la connexion SQLite : si jamais même SQLite n'arrive pas à se connecter (cas rare, genre problème de droits sur le fichier), l'erreur est levée clairement au lieu de planter sans explication.
+
+Les méthodes que j'avais ajoutées avant restent toutes là :
+
+query() pour les requêtes simples sans paramètre ;
+prepare() pour préparer une requête avec des paramètres ;
+executeQuery() pour exécuter une requête préparée et récupérer directement le résultat ;
+executeUpdate() pour les INSERT/UPDATE/DELETE, qui renvoie le nombre de lignes modifiées ;
+transaction() qui gère automatiquement le commit et le rollback en cas d'erreur ;
+lastInsertId() pour récupérer l'id généré après un INSERT.
+Ce que j'ai testé
+J'ai revérifié que sans PostgreSQL disponible, l'application bascule bien sur SQLite automatiquement, que DB_DRIVER soit défini ou non.
+J'ai testé transaction() avec un cas qui réussit (les données sont bien enregistrées) et un cas où je fais volontairement échouer le traitement au milieu (les données ne sont pas enregistrées du tout, le rollback fonctionne).
+J'ai testé executeUpdate() suivi de lastInsertId() pour vérifier que je récupère bien le bon id après une insertion.
+Résultat
+La classe Database fonctionne maintenant comme prévu au départ : connexion PostgreSQL en priorité, bascule automatique et transparente sur SQLite si besoin
+
+
+
+
+
