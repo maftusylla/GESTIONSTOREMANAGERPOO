@@ -1457,3 +1457,38 @@ La dette est donc créée uniquement lorsque le statut de la commande est CREDIT
 
 
 Le VenteService joue donc le rôle d'orchestrateur métier.
+
+
+
+-Réajustement des fichiers sql pour test 
+-creation de commande repository
+
+
+
+
+## Gestion du panier avec la session
+
+Transformation des fonctions de session procédurales en une classe Session pour centraliser la gestion de la session.
+Mise en place du panier temporaire dans $_SESSION, avec les méthodes initPanier(), getPanier(), ajouterAuPanier() et viderPanier().
+Adaptation du POSController pour récupérer le panier depuis la session et le transmettre au VenteService.
+Après validation réussie de la vente, le panier est vidé de la session ; en cas d'erreur, il est conservé.
+Le VenteService reste indépendant de la session et conserve la responsabilité de la validation métier, de la transaction SQL, du stock et du crédit.
+
+###### 📌 Step 2.4 (17h00 - 20h00) : Controller POS & Vue Caisse
+
+## POSController.php — Gestion du POS et du panier
+Création du POSController pour centraliser les interactions entre l'interface POS, les repositories et le service métier VenteService.
+Injection des dépendances nécessaires : ClientRepository, ProduitRepository, CommandeRepository et VenteService.
+Initialisation de la session dans le constructeur afin de permettre la conservation temporaire du panier.
+Mise en place de afficher() pour gérer les actions POST du POS, charger les clients, produits, panier et ventes, puis transmettre les données à la vue.
+Ajout de initPanier() et getPanier() pour initialiser et récupérer le panier stocké en session.
+Ajout de ajouterAuPanier() pour vérifier le produit et la quantité avant d'ajouter la ligne au panier temporaire.
+Adaptation de traiterCreationCommande() pour récupérer le panier depuis la session et le transmettre à VenteService.
+Vidage du panier après la validation réussie de la commande grâce à viderPanier().
+Mise en place de construireRegistreVentes() pour récupérer les commandes existantes et les associer à leurs clients avant affichage.
+Le contrôleur assure ainsi la gestion HTTP et du panier, tandis que VenteService conserve les règles métier et la transaction SQL.
+
+
+
+
+
