@@ -1,3 +1,4 @@
+-- Active: 1785147799442@@127.0.0.1@5432@gestionstoremanagerpro
 -
 
 DROP TABLE IF EXISTS ligne_approvisionnement CASCADE;
@@ -10,6 +11,7 @@ DROP TABLE IF EXISTS client                  CASCADE;
 DROP TABLE IF EXISTS fournisseur             CASCADE;
 DROP TABLE IF EXISTS produit                 CASCADE;
 DROP TABLE IF EXISTS utilisateur             CASCADE;
+
 
 CREATE TABLE utilisateur (
     id            SERIAL PRIMARY KEY,
@@ -168,6 +170,11 @@ VALUES
 (2, 36000, 16000, 'NON SOLDEE'),
 (4, 28000, 18000, 'NON SOLDEE'),
 (6, 54000, 24000, 'NON SOLDEE');
+
+
+
+
+
 CREATE TABLE paiement (
     id              SERIAL PRIMARY KEY,
     dette_id        INTEGER        NOT NULL REFERENCES dette(id),
@@ -176,6 +183,8 @@ CREATE TABLE paiement (
         CHECK (mode_paiement IN ('Especes', 'Wave', 'Orange Money')),
     date_paiement   TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+
 
 INSERT INTO paiement
 (dette_id, montant, mode_paiement, date_paiement)
@@ -253,3 +262,51 @@ CREATE INDEX idx_paiement_dette_id              ON paiement(dette_id);
 CREATE INDEX idx_approvisionnement_fournisseur  ON approvisionnement(fournisseur_id);
 CREATE INDEX idx_ligne_appro_approvisionnement  ON ligne_approvisionnement(approvisionnement_id);
 CREATE INDEX idx_ligne_appro_produit_id         ON ligne_approvisionnement(produit_id);
+
+
+
+
+
+
+
+
+
+
+SELECT
+    c.id                              AS id_commande,
+    '#CMD-' || c.id                   AS ref,
+    cl.prenom || ' ' || cl.nom        AS client,
+    cl.telephone,
+    c.date_commande,
+    c.montant_total,
+    c.montant_verse,
+    (c.montant_total - c.montant_verse) AS reste,
+    c.mode_reglement,
+    c.statut
+FROM commande c
+INNER JOIN client cl ON cl.id = c.client_id
+ORDER BY c.id DESC;
+
+
+
+SELECT COUNT(*) AS nb_commandes_avant FROM commande;
+ 
+BEGIN;
+ 
+    INSERT INTO commande (client_id, montant_total, montant_verse, mode_reglement, statut)
+    VALUES (1, 15000, 15000, 'Especes', 'COMPTANT')
+    RETURNING id;
+ 
+    INSERT INTO ligne_commande (commande_id, produit_id, quantite, prix_unitaire)
+    VALUES (
+        (SELECT MAX(id) FROM commande), 
+        1, 1, 15000
+    );
+ 
+    UPDATE produit
+    SET quantite_stock = quantite_stock - 1
+    WHERE id = 1 AND quantite_stock >= 1;
+ 
+COMMIT;
+
+

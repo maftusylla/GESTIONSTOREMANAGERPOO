@@ -1179,11 +1179,6 @@ Objet métier
 Entity
 
 
-
-
-
-
-
 **Difficultés / Obstacles** :
 
 Ma première question a été : pourquoi PDO renvoie un tableau associatif (`$ligne['id']`) et pas directement un objet ? J'ai regardé `configurePDO()` dans `Database.php` : le mode `PDO::FETCH_ASSOC` est fixé explicitement, donc PDO ne renvoie jamais de `stdClass` ni d'objet  seulement des tableaux.
@@ -1192,3 +1187,273 @@ Pour transformer ce tableau en objet, j'ai d'abord construit `new Produit(...)` 
 
 J'ai aussi vérifié une alternative : `PDO::FETCH_CLASS`, qui permettrait à PDO de construire l'objet directement sans passer par un tableau. Je l'ai écartée : ce mode appelle le constructeur sans aucun argument après avoir rempli les propriétés par réflexion, ce qui m'aurait obligée à rendre tous les paramètres de mes constructeurs optionnels (`int $id = 0`, etc.)
 
+
+#### 📌 Step 2.3 (14h00 - 17h00) : Service Métier Vente POS & Transaction SQL
+- **Livrable** : `src/Service/VenteService.php` (Panier, décrémentation stock, limite de crédit sous transaction PDO).
+
+Cette étape consiste à centraliser dans VenteService le processus métier permettant de valider une vente POS.
+
+Le service assure notamment :
+
+la validation du panier ;
+la vérification du client ;
+le calcul du montant total ;
+la détermination du statut COMPTANT ou CREDIT ;
+le contrôle de la limite de crédit ;
+la création de la commande ;
+l'enregistrement des lignes de commande ;
+la décrémentation du stock ;
+la création de la dette en cas de vente à crédit ;
+l'exécution de l'ensemble de ces opérations dans une transaction SQL.
+
+
+1. Connexion aux dépendances
+
+VenteService utilise la classe Database ainsi que les repositories nécessaires :
+
+private Database $db;
+private ClientRepository $clientRepository;
+private ProduitRepository $produitRepository;
+private CommandeRepository $commandeRepository;
+
+Ces dépendances sont initialisées dans le constructeur :
+
+$this->db = Database::getInstance();
+$this->clientRepository = new ClientRepository();
+$this->produitRepository = new ProduitRepository();
+$this->commandeRepository = new CommandeRepository();
+
+Le service orchestre donc les différents composants au lieu d'effectuer directement toutes les opérations SQL.
+
+2. Validation du panier
+
+Avant de commencer la vente, le service vérifie que le panier contient au moins une ligne :
+
+if ($lignesPanier === []) {
+    throw new InvalidArgumentException(
+        'Le panier ne peut pas être vide.'
+    );
+}
+
+Une vente ne peut donc pas être validée avec un panier vide.
+
+3. Validation du mode de règlement
+
+Les modes autorisés correspondent à ceux définis dans le modèle SQL :
+
+private const MODES_REGLEMENT_VALIDES = [
+    'Especes',
+    'Wave',
+    'Orange Money'
+];
+
+Le service vérifie que le mode fourni appartient à cette liste :
+
+if (!in_array(
+    $modeReglement,
+    self::MODES_REGLEMENT_VALIDES,
+    true
+)) {
+    throw new InvalidArgumentException(
+        'Mode de règlement invalide : ' . $modeReglement
+    );
+}
+
+Cela empêche la création d'une commande avec un mode de règlement non prévu.
+
+4. Vérification du montant versé
+
+Le service refuse également un montant versé négatif :
+
+if ($montantVerse < 0) {
+    throw new InvalidArgumentException(
+        'Le montant versé ne peut pas être négatif.'
+    );
+}
+
+Le client est ensuite recherché à travers ClientRepository.
+
+Si le client n'existe pas, la vente est interrompue.
+
+5. Calcul du panier
+
+Pour chaque ligne du panier, le service récupère le produit grâce à ProduitRepository.
+
+Il vérifie ensuite :
+
+que le produit existe ;
+que la quantité est supérieure à zéro.
+
+Le sous-total est calculé à partir du prix de vente du produit :
+
+$sousTotal = $produit->getPrixVente() * $quantite;
+
+Le montant total est ensuite constitué par l'addition des sous-totaux.
+
+Le service prépare également les données nécessaires à l'enregistrement des lignes de commande.
+
+6. Contrôle du montant versé
+
+Une fois le total calculé, le service vérifie que le montant versé ne dépasse pas le montant de la commande :
+
+if ($montantVerse > $montantTotal) {
+    throw new InvalidArgumentException(
+        'Le montant versé ne peut pas dépasser le montant total.'
+    );
+}
+
+Le statut de la commande est ensuite déterminé automatiquement :
+
+$statut = $montantVerse >= $montantTotal
+    ? 'COMPTANT'
+    : 'CREDIT';
+
+Ainsi :
+
+Montant versé >= Total
+        ↓
+    COMPTANT
+
+
+Montant versé < Total
+        ↓
+     CREDIT
+
+7. Contrôle de la limite de crédit
+
+Lorsqu'une commande devient une vente à crédit, le montant restant à créditer est calculé :
+
+$montantACredit = $montantTotal - $montantVerse;
+
+Le service récupère ensuite l'encours actuel du client :
+
+$encoursActuel =
+    $this->clientRepository
+        ->calculerEncoursDettes($client->getId());
+
+La règle métier existante de l'entité Client est ensuite utilisée :
+
+$client->peutObtenirCredit(
+    $montantACredit,
+    $encoursActuel
+);
+
+Si la limite est dépassée, la vente est refusée.
+
+Cette partie permet donc de respecter la règle :
+
+Encours actuel
+      +
+Nouveau crédit
+      <=
+Limite de crédit
+8. Transaction SQL
+
+La validation réelle de la vente est exécutée dans une transaction :
+
+return $this->db->transaction(
+    function () use (...) {
+        // opérations de vente
+    }
+);
+
+Cela permet de regrouper les opérations liées à la vente dans une même transaction SQL.
+
+Le principe recherché est :
+
+BEGIN
+  ↓
+Créer commande
+  ↓
+Créer lignes
+  ↓
+Décrémenter stock
+  ↓
+Créer dette éventuelle
+  ↓
+COMMIT
+
+En cas d'exception, la transaction peut être annulée par la couche Database.
+
+Cela garantit qu'une erreur pendant le traitement ne laisse pas la vente partiellement enregistrée.
+
+9. Création de la commande
+
+Une fois les contrôles effectués, le service demande à CommandeRepository de créer la commande :
+
+$commandeId = $this->commandeRepository->creerCommande(
+    $client->getId(),
+    $montantTotal,
+    $montantVerse,
+    $modeReglement,
+    $statut
+);
+
+Le repository réalise l'insertion SQL avec une requête préparée et retourne l'identifiant de la commande créée.
+
+10. Création des lignes de commande
+
+Chaque ligne préparée précédemment est enregistrée via :
+
+$this->commandeRepository->ajouterLigneCommande(
+    $commandeId,
+    $ligne['produitId'],
+    $ligne['quantite'],
+    $ligne['prixUnitaire']
+);
+
+Le SQL correspondant est réalisé dans CommandeRepository avec des paramètres PDO :
+
+INSERT INTO ligne_commande
+    (commande_id, produit_id, quantite, prix_unitaire)
+VALUES
+    (:commandeId, :produitId, :quantite, :prixUnitaire)
+
+11. Décrémentation du stock
+
+Après l'enregistrement de chaque ligne, le service demande au ProduitRepository de décrémenter le stock :
+
+$lignesAffectees =
+    $this->produitRepository->decrementerStock(
+        $ligne['produitId'],
+        $ligne['quantite']
+    );
+
+Si aucune ligne n'est affectée, une exception est déclenchée :
+
+if ($lignesAffectees === 0) {
+    throw new RuntimeException(
+        'Stock insuffisant pour le produit id '
+        . $ligne['produitId'] . '.'
+    );
+}
+
+La vente ne peut donc pas continuer lorsque la quantité disponible n'est pas suffisante.
+
+12. Création de la dette
+
+Lorsqu'une vente est à crédit, le montant restant est enregistré dans la table dette.
+
+if ($statut === 'CREDIT') {
+    $montantACredit = $montantTotal - $montantVerse;
+
+
+    $this->db->executeUpdate(
+        'INSERT INTO dette
+            (commande_id, montant_initial, montant_restant, statut)
+         VALUES
+            (:commandeId, :montantInitial,
+             :montantRestant, :statut)',
+        [
+            'commandeId' => $commandeId,
+            'montantInitial' => $montantACredit,
+            'montantRestant' => $montantACredit,
+            'statut' => 'NON SOLDEE',
+        ]
+    );
+}
+
+La dette est donc créée uniquement lorsque le statut de la commande est CREDIT.
+
+
+Le VenteService joue donc le rôle d'orchestrateur métier.
