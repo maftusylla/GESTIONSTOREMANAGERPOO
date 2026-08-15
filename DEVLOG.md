@@ -739,3 +739,13 @@ la gestion des erreurs de connexion.
 Commit
 git add src/Core/Database.php
 git commit -m "feat(core): implementation de Database Singleton avec fallback automatique PostgreSQL vers SQLite"
+
+
+### ☀️ PHASE 2 : SAMEDI (09h00 - 20h00) — Cœur POO & Ventes POS
+
+--- 📌 Step 1.2  Schéma SQL PostgreSQL / SQLite
+
+**Ce qui a été fait** :
+j'ai fais des modifications dans mes fichier schema.sql et shema_sqlite.sql pour inserer des données de base  à mes tables .
+
+ git commit -m "modification(database): insertion de données d'initialisation SQL avec dans  schema.sql et shema_sqlite.sql "
