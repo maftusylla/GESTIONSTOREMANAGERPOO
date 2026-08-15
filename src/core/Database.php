@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-
-
 final class Database
 {
     private static ?Database $instance = null;
@@ -12,24 +10,48 @@ final class Database
 
     private string $driver;
 
- 
     private function __construct()
     {
+        $this->driver = strtolower(
+            getenv('DB_DRIVER') ?: 'sqlite'
+        );
+
         try {
-            $this->pdo    = $this->connectPostgreSQL();
-            $this->driver = 'pgsql';
+            $this->pdo = match ($this->driver) {
+                'pgsql', 'postgres', 'postgresql'
+                    => $this->connectPostgreSQL(),
+
+                'sqlite'
+                    => $this->connectSQLite(),
+
+                default
+                    => throw new RuntimeException(
+                        "Driver de base de données inconnu : {$this->driver}"
+                    ),
+            };
+
+            $this->configurePDO();
+
         } catch (PDOException $e) {
+
             error_log(
-                '[Database] Connexion PostgreSQL impossible (' . $e->getMessage() . '). '
-                . 'Fallback automatique sur SQLite (erp.db).'
+                '[Database] Erreur de connexion '
+                . strtoupper($this->driver)
+                . ' : '
+                . $e->getMessage()
             );
 
-            $this->pdo    = $this->connectSQLite();
-            $this->driver = 'sqlite';
+            throw new RuntimeException(
+                'Impossible de se connecter à la base de données.',
+                0,
+                $e
+            );
         }
     }
 
-   
+    /**
+     * Singleton
+     */
     public static function getInstance(): self
     {
         if (self::$instance === null) {
@@ -39,7 +61,9 @@ final class Database
         return self::$instance;
     }
 
-
+    /**
+     * Retourne la connexion PDO
+     */
     public function getConnection(): PDO
     {
         return $this->pdo;
@@ -51,53 +75,194 @@ final class Database
         return $this->driver;
     }
 
+   
+    private function configurePDO(): void
+    {
+        $this->pdo->setAttribute(
+            PDO::ATTR_ERRMODE,
+            PDO::ERRMODE_EXCEPTION
+        );
+
+        $this->pdo->setAttribute(
+            PDO::ATTR_DEFAULT_FETCH_MODE,
+            PDO::FETCH_ASSOC
+        );
+
+       
+        if ($this->driver === 'pgsql') {
+            $this->pdo->setAttribute(
+                PDO::ATTR_EMULATE_PREPARES,
+                false
+            );
+        }
+    }
 
     private function connectPostgreSQL(): PDO
     {
-        $host     = getenv('DB_HOST') ?: '127.0.0.1';
-        $port     = getenv('DB_PORT') ?: '5432';
-        $dbname   = getenv('DB_NAME') ?: 'gestionStoreManagerPro';
-        $user     = getenv('DB_USER') ?: 'postgres';
-        $password = getenv('DB_PASSWORD') ?: 'PASSWORD';
+        $host = getenv('DB_HOST') ?: '127.0.0.1';
 
-        $dsn = "pgsql:host={$host};port={$port};dbname={$dbname}";
+        $port = getenv('DB_PORT') ?: '5432';
 
-        return new PDO($dsn, $user, $password, [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES   => false, 
-        ]);
+        $dbname = getenv('DB_NAME')
+            ?: 'storemanagerpro';
+
+        $user = getenv('DB_USER')
+            ?: 'postgres';
+
+        $password = getenv('DB_PASSWORD')
+            ?: 'PASSWORD';
+
+        $dsn =
+            "pgsql:"
+            . "host={$host};"
+            . "port={$port};"
+            . "dbname={$dbname}";
+
+        return new PDO(
+            $dsn,
+            $user,
+            $password
+        );
     }
 
- 
+
     private function connectSQLite(): PDO
     {
+       
         $racineProjet = dirname(__DIR__, 2);
-        $dbFile       = $racineProjet . '/erp.db';
-        $schemaFile   = $racineProjet . '/schema_sqlite.sql';
+
+        $dbFile = $racineProjet . '/erp.db';
+
+        $schemaFile = $racineProjet . '/schema_sqlite.sql';
 
         $doitEtreInitialisee = !file_exists($dbFile);
 
-        $pdo = new PDO('sqlite:' . $dbFile, null, null, [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        ]);
+        $pdo = new PDO(
+            'sqlite:' . $dbFile
+        );
 
-        $pdo->exec('PRAGMA foreign_keys = ON;');
 
-        if ($doitEtreInitialisee && file_exists($schemaFile)) {
-            $pdo->exec((string) file_get_contents($schemaFile));
+        $pdo->exec(
+            'PRAGMA foreign_keys = ON;'
+        );
+
+      
+        if (
+            $doitEtreInitialisee
+            && file_exists($schemaFile)
+        ) {
+            $schema = file_get_contents($schemaFile);
+
+            if ($schema === false) {
+                throw new RuntimeException(
+                    'Impossible de lire schema_sqlite.sql.'
+                );
+            }
+
+            $pdo->exec($schema);
         }
 
         return $pdo;
     }
 
+    public function query(
+        string $sql,
+        bool $single = true
+    ): array {
+        $statement = $this->pdo->query($sql);
+
+        $resultat = $single
+            ? $statement->fetch()
+            : $statement->fetchAll();
+
+        return $resultat === false
+            ? []
+            : $resultat;
+    }
+
+
+    public function prepare(
+        string $sql,
+        array $datas = []
+    ): PDOStatement {
+        $statement = $this->pdo->prepare($sql);
+
+        $statement->execute($datas);
+
+        return $statement;
+    }
+
+  
+    public function executeQuery(
+        string $sql,
+        array $datas = [],
+        bool $single = true
+    ): array {
+        $statement = $this->prepare(
+            $sql,
+            $datas
+        );
+
+        $resultat = $single
+            ? $statement->fetch()
+            : $statement->fetchAll();
+
+        return $resultat === false
+            ? []
+            : $resultat;
+    }
+
+ 
+    public function executeUpdate(
+        string $sql,
+        array $datas = []
+    ): int {
+        $statement = $this->prepare(
+            $sql,
+            $datas
+        );
+
+        return $statement->rowCount();
+    }
+
+
+    public function transaction(
+        callable $callback
+    ): mixed {
+        $this->pdo->beginTransaction();
+
+        try {
+            $resultat = $callback($this);
+
+            $this->pdo->commit();
+
+            return $resultat;
+
+        } catch (Throwable $e) {
+
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+
+            throw $e;
+        }
+    }
+
+    public function lastInsertId(): string
+    {
+        return $this->pdo->lastInsertId();
+    }
+
+  
     private function __clone(): void
     {
     }
 
+  
     public function __wakeup(): void
     {
-        throw new \RuntimeException('Impossible de désérialiser le Singleton Database.');
+        throw new RuntimeException(
+            'Impossible de désérialiser le Singleton Database.'
+        );
     }
 }

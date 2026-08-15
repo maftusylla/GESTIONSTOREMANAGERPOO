@@ -749,3 +749,81 @@ git commit -m "feat(core): implementation de Database Singleton avec fallback au
 j'ai fais des modifications dans mes fichier schema.sql et shema_sqlite.sql pour inserer des données de base  à mes tables .
 
  git commit -m "modification(database): insertion de données d'initialisation SQL avec dans  schema.sql et shema_sqlite.sql "
+
+#### 📌 Step 1.3 (22h00 - 23h00) : Singleton Database & Fallback Automatique
+
+**Ce qui a été fait** :
+j'ai fais des modifications dans mon fichier Database.php apres avoir tester ,je viens parfaire mon fichier avec les fonctions query,executeQuery,executeUpdate,prepare qui manquer 
+
+Voici un résumé que tu peux mettre directement dans ton **devlog** :
+
+# Migration et amélioration de la gestion de la base de données
+
+## Objectif
+
+La gestion de la base de données a été améliorée afin de rendre l'application plus flexible, plus propre et plus facile à maintenir. Le projet utilisait initialement une connexion PostgreSQL procédurale avec plusieurs fonctions globales (`connexionDB()`, `query()`, `prepare()`, `executeQuery()` et `executeUpdate()`).
+
+La gestion de la connexion a été progressivement centralisée dans une classe `Database`.
+
+## Passage à une classe `Database`
+
+Une classe `Database` utilisant le pattern **Singleton** a été mise en place.
+
+Elle centralise désormais :
+
+* la création de la connexion PDO ;
+* la configuration de PDO ;
+* la gestion des requêtes préparées ;
+* l'exécution des requêtes `SELECT` ;
+* l'exécution des requêtes `INSERT`, `UPDATE` et `DELETE` ;
+* la récupération du dernier identifiant inséré ;
+* la gestion des transactions ;
+* la détection du moteur de base de données utilisé.
+
+L'accès à la connexion se fait maintenant avec :
+
+```php
+$db = Database::getInstance();
+```
+
+puis :
+
+```php
+$pdo = $db->getConnection();
+```
+
+ou directement avec les méthodes de la classe pour exécuter les requêtes.
+
+## Support de PostgreSQL et SQLite
+
+La classe `Database` a été conçue pour supporter deux moteurs :
+
+* **PostgreSQL**, utilisé pour l'environnement principal ;
+* **SQLite**, utilisé notamment pour simplifier le développement local.
+
+Le moteur utilisé est maintenant déterminé explicitement par la configuration `DB_DRIVER`.
+
+Exemple :
+
+```text
+DB_DRIVER=sqlite
+```
+
+ou :
+
+```text
+DB_DRIVER=pgsql
+```
+
+Cette approche est préférable au fallback automatique, car une erreur de connexion PostgreSQL ne doit pas provoquer silencieusement un changement de base de données.
+
+##resultat
+La gestion de la base de données est maintenant plus structurée et plus facilement maintenable.
+
+Le projet peut fonctionner avec PostgreSQL ou SQLite sans modifier toute la logique applicative. La connexion PDO, les requêtes préparées, les transactions et l'initialisation SQLite sont centralisées dans une seule classe.
+
+Cette évolution prépare également le projet à une architecture plus propre basée sur la séparation entre :
+
+Database → Repository → Service → Controller
+
+Cette architecture pourra ensuite être appliquée aux différents modules, notamment les commandes, les paiements, les dettes, les approvisionnements et la gestion des produits.
