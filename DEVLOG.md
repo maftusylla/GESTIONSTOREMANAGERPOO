@@ -852,5 +852,165 @@ La classe Database fonctionne maintenant comme prévu au départ : connexion Pos
 
 
 
+## Création des entités POO avec encapsulation et méthodes métier
+
+Cette étape consiste à mettre en place les principales entités métier du projet StoreManagerPro en programmation orientée objet.
 
 
+Les entités suivantes ont été mises en place dans :
+
+src/Model/Entity/
+Utilisateur
+Role
+Produit
+Client
+Fournisseur
+Commande
+LigneCommande
+Dette
+Paiement
+Approvisionnement
+LigneApprovisionnement
+
+Ces entités correspondent directement aux principales tables du modèle de données.
+
+Encapsulation
+
+Les propriétés des entités ont été rendues privées (private).
+
+Exemple :
+
+private int $id;
+private string $nom;
+private float $prixVente;
+private int $quantiteStock;
+
+L'accès aux données se fait désormais par des méthodes publiques dédiées lorsque cela est nécessaire :
+
+public function getNom(): string
+{
+    return $this->nom;
+}
+
+Cette modification permet d'éviter qu'une partie quelconque de l'application puisse modifier directement l'état interne d'une entité.
+
+Par exemple, il n'est plus possible de faire directement :
+
+$produit->quantiteStock = -10;
+
+L'état de l'objet est ainsi mieux contrôlé.
+
+Méthodes métier
+
+Les méthodes métier déjà identifiées dans les entités ont été conservées afin que les objets ne soient pas uniquement de simples conteneurs de données.
+
+Quelques exemples :
+
+Produit
+public function estEnRuptureDeStock(): bool
+{
+    return $this->quantiteStock === 0;
+}
+
+Cette méthode permet à l'entité Produit de déterminer directement si son stock est épuisé.
+
+Client
+public function peutObtenirCredit(
+    float $montantSupplementaire,
+    float $encoursDettesActuel
+): bool {
+    return (
+        $encoursDettesActuel + $montantSupplementaire
+    ) <= $this->limiteCredit;
+}
+
+La règle liée à la limite de crédit est ainsi portée par l'entité Client.
+
+Commande
+public function montantRestantAPayer(): float
+{
+    return $this->montantTotal - $this->montantVerse;
+}
+
+La commande est capable de déterminer elle-même le montant restant à payer.
+
+Une autre méthode permet de vérifier si elle est intégralement payée :
+
+public function estPayeeIntegralement(): bool
+{
+    return $this->montantVerse >= $this->montantTotal;
+}
+Ligne de commande
+public function sousTotal(): float
+{
+    return $this->quantite * $this->prixUnitaire;
+}
+Dette
+public function estSoldee(): bool
+{
+    return $this->statut === 'SOLDEE';
+}
+Approvisionnement
+public function estRecu(): bool
+{
+    return $this->statut === 'REÇU';
+}
+Ligne d'approvisionnement
+public function coutTotal(): float
+{
+    return $this->quantiteLivree * $this->coutUnitaire;
+}
+Typage des propriétés
+
+Les propriétés et les méthodes utilisent le typage PHP afin de rendre le modèle plus fiable.
+
+Exemple :
+
+private int $id;
+private string $nom;
+private float $prixVente;
+private int $quantiteStock;
+
+Les constructeurs sont également typés afin que les objets soient créés avec des données correspondant à leur modèle.
+
+Enumération des rôles
+
+Le rôle utilisateur est représenté par un enum PHP :
+
+enum Role: string
+{
+    case ADMIN = 'ADMIN';
+    case VENTE = 'VENTE';
+    case STOCK = 'STOCK';
+    case INVENTAIRE = 'INVENTAIRE';
+}
+
+Cela évite de manipuler librement des chaînes de caractères pour les rôles et permet de conserver les valeurs prévues par le modèle de données.
+
+Principe appliqué
+
+La couche Entity représente désormais les objets métier du système.
+
+L'organisation retenue est :
+
+Entity
+│
+├── Utilisateur
+├── Produit
+├── Client
+├── Fournisseur
+├── Commande
+├── LigneCommande
+├── Dette
+├── Paiement
+├── Approvisionnement
+└── LigneApprovisionnement
+
+Chaque entité possède :
+
+ses données internes ;
+un constructeur ;
+des propriétés encapsulées ;
+des méthodes d'accès lorsque nécessaires ;
+les méthodes métier déjà définies pour son domaine.
+Résultat de l'étape
