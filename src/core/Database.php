@@ -2,10 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Core;
 
-use PDO;
-use PDOException;
 
 final class Database
 {
@@ -75,8 +72,9 @@ final class Database
  
     private function connectSQLite(): PDO
     {
-        $dbFile     = __DIR__ . '/../../erp.db';
-        $schemaFile = __DIR__ . '/../../schema_sqlite.sql';
+        $racineProjet = dirname(__DIR__, 2);
+        $dbFile       = $racineProjet . '/erp.db';
+        $schemaFile   = $racineProjet . '/schema_sqlite.sql';
 
         $doitEtreInitialisee = !file_exists($dbFile);
 
