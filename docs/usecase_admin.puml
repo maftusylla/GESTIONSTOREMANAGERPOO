@@ -7,8 +7,6 @@ rectangle "ADMIN BOUTIQUE" {
 
     usecase "S'authentifier" as AUTH
 
-    
-
     rectangle "DASHBOARD" {
 
         usecase "Voir statistiques" as VS

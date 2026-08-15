@@ -95,12 +95,12 @@ LigneCommande "0...*" --> "1" Produit
 
 Commande "1" --> "0..1" Dette 
 
-Dette "1" -- "1" Paiement 
+Dette "1" -- "0..*" Paiement 
 
 Fournisseur "1" -- "0..*" Approvisionnement 
 
 Approvisionnement "1" -- "1..*" LigneApprovisionnement 
-LigneApprovisionnement "0...*" --> "1" Produit 
+LigneApprovisionnement "0..*" --> "1" Produit 
 
 Utilisateur --> Role 
 

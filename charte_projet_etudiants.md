@@ -17,7 +17,7 @@ L'objectif principal n'est pas seulement d'avoir une application qui fonctionne,
 ## 📌 Les 4 Conditions de Rendu Obligatoires
 
 ### 1. 📜 Historique Git Régulier (Obligatoire)
-Le projet doit être hébergé sur un dépôt Git (GitHub ou GitLab) dès le premier jour.
+Le projet doit être hébergé sur un dépôt Git (GitHub ou GitLab) dès le premier jour.CREATE DATABASE gestionStoreManagerPro;
 - **Minimum 15 commits** étalés sur toute la durée du projet.
 - **Interdiction du commit unique** : Un dépôt rendu avec un seul ou deux commits globaux à la fin sera refusé (**Note = 0/20**).
 - **Messages explicites** : Chaque commit doit décrire la fonctionnalité ajoutée (ex: `feat(client): ajout du calcul de la limite de crédit`).
