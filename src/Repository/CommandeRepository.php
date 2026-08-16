@@ -90,6 +90,27 @@ class CommandeRepository
             $lignes
         );
     }
+    public function sommeTotalMontantVerse(): float
+    {
+        $ligne = $this->db->executeQuery(
+            'SELECT COALESCE(SUM(montant_verse), 0) AS total FROM commande'
+        );
+
+        return (float) ($ligne['total'] ?? 0);
+    }
+    public function findLignesByCommande(int $commandeId): array
+    {
+        $lignes = $this->db->executeQuery(
+            'SELECT lc.id, lc.commande_id, lc.produit_id, lc.quantite, lc.prix_unitaire, p.nom AS produit_nom
+             FROM ligne_commande lc
+             INNER JOIN produit p ON p.id = lc.produit_id
+             WHERE lc.commande_id = :commandeId',
+            ['commandeId' => $commandeId],
+            false
+        );
+
+        return $lignes;
+    }
 
     private function hydrater(array $ligne): Commande
     {

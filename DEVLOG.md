@@ -1535,3 +1535,21 @@ Calcul automatique du nouveau montant restant et du statut SOLDEE / NON SOLDEE.
 Retour d’un nouvel objet Dette représentant l’état après remboursement.
 
 Gestion des dettes et remboursements : création de DetteRepository pour centraliser les opérations SQL liées aux dettes et paiements, avec hydratation des entités Dette et Paiement. Création de DebtService pour encapsuler les règles métier de remboursement : validation du paiement, contrôle du reste dû et du statut de la dette, puis exécution de l’enregistrement du paiement et de la mise à jour de la dette dans une transaction SQL.
+
+
+
+## fix bug  d'affichage de formulaire dans views/pos/index.php
+ajout dans pos controller pour qu'il puisse memeoriser le client selectionner dans la section
+
+ ajout de findLignesByCommande dans commandeRepository pour pouvoir afficher les lignes dans le Registre Général des Ventes & Commandes
+ dynamiser les statistiques dans views/ pos/index
+
+## gerer l'affichage dans views/dettes/index 
+pour l'affichage de la registre des dettes 
+gerer le buton remboursement paiements articles 
+dynamiser aussi les statistiques de cette pages dettes 
+
+linker les deux menus ventes et dettes mais les autres mlenus sont statiques pour l'instant 
+
+gerer la routing dans router.php 
+

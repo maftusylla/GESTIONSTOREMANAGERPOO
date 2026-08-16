@@ -97,6 +97,23 @@ class DetteRepository
             ]
         );
     }
+    public function sommeTotalPaiements(): float
+    {
+        $ligne = $this->db->executeQuery(
+            'SELECT COALESCE(SUM(montant), 0) AS total FROM paiement'
+        );
+
+        return (float) ($ligne['total'] ?? 0);
+    }
+
+    public function sommeEncoursActif(): float
+    {
+        $ligne = $this->db->executeQuery(
+            "SELECT COALESCE(SUM(montant_restant), 0) AS total FROM dette WHERE statut = 'NON SOLDEE'"
+        );
+
+        return (float) ($ligne['total'] ?? 0);
+    }
 
     private function hydrater(array $ligne): Dette
     {

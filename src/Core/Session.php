@@ -26,6 +26,19 @@ final class Session
 
         return $_SESSION[$key] ?? $default;
     }
+    public static function setFlash(string $key, mixed $value): void
+    {
+        self::init();
+        $_SESSION['_flash'][$key] = $value;
+    }
+
+    public static function getFlash(string $key, mixed $default = null): mixed
+    {
+        self::init();
+        $value = $_SESSION['_flash'][$key] ?? $default;
+        unset($_SESSION['_flash'][$key]);
+        return $value;
+    }
 
     public static function unset(string $key): void
     {
@@ -42,3 +55,4 @@ final class Session
         session_destroy();
     }
 }
+
