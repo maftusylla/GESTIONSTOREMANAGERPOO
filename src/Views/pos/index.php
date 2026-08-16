@@ -1275,10 +1275,6 @@ foreach ($panier as $ligne) {
                     <label for="client_id">
                         Client Acheteur
                     </label>
-
-
-                    
-
                     <select
                         name="client_id"
                         id="client_id"

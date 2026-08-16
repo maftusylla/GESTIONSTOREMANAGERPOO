@@ -245,6 +245,8 @@ SELECT * FROM dette;
 SELECT * FROM paiement;
 
 SELECT * FROM approvisionnement;
+SELECT * FROM client;
+
 
 SELECT * FROM ligne_approvisionnement;
 

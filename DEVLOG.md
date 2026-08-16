@@ -1503,3 +1503,35 @@ Le contrôleur assure ainsi la gestion HTTP et du panier, tandis que VenteServic
 * Les éléments non encore pris en charge par les repositories/services ont été laissés de côté afin de **ne pas inventer de fonctionnalités**.
 
 
+
+
+### 🚀 PHASE 3 : DIMANCHE (09h00 - 18h00) — Dettes, Approvisionnements, Rôles & Clôture
+
+#### 📌 Step 3.1 (09h00 - 11h30) : Gestion des Dettes & Remboursements
+
+
+## DetteRepository.php
+
+Mise en place du repository dédié à la gestion des dettes et de leurs paiements.
+
+Connexion à la base via Database.
+Ajout des méthodes de récupération d’une dette par son ID et de toutes les dettes.
+Récupération des paiements associés à une dette avec transformation en objets Paiement.
+Ajout de l’enregistrement d’un paiement avec une requête SQL préparée.
+Ajout de la mise à jour du montant restant et du statut de la dette.
+Mise en place d’une méthode privée hydrater() pour transformer les résultats SQL en objets Dette.
+
+## DebtService.php
+
+Mise en place du service métier chargé de gérer les remboursements.
+
+Validation du montant du remboursement.
+Vérification du mode de paiement parmi Especes, Wave et Orange Money.
+Vérification de l’existence de la dette.
+Blocage d’un remboursement sur une dette déjà soldée.
+Contrôle du montant afin d’empêcher un remboursement supérieur au reste dû.
+Exécution du remboursement dans une transaction PDO : enregistrement du paiement puis mise à jour de la dette.
+Calcul automatique du nouveau montant restant et du statut SOLDEE / NON SOLDEE.
+Retour d’un nouvel objet Dette représentant l’état après remboursement.
+
+Gestion des dettes et remboursements : création de DetteRepository pour centraliser les opérations SQL liées aux dettes et paiements, avec hydratation des entités Dette et Paiement. Création de DebtService pour encapsuler les règles métier de remboursement : validation du paiement, contrôle du reste dû et du statut de la dette, puis exécution de l’enregistrement du paiement et de la mise à jour de la dette dans une transaction SQL.
