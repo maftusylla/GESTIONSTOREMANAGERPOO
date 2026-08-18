@@ -5,20 +5,20 @@ declare(strict_types=1);
  class Approvisionnement
 {
     private int $id;
-    private int $fournisseurId;
+    private Fournisseur $fournisseur;
     private string $refBl;
     private ?DateTimeImmutable $dateReception;
     private string $statut;
 
     public function __construct(
         int $id,
-        int $fournisseurId,
+        Fournisseur $fournisseur,
         string $refBl,
         ?DateTimeImmutable $dateReception,
         string $statut
     ) {
         $this->id = $id;
-        $this->fournisseurId = $fournisseurId;
+        $this->fournisseur = $fournisseur;
         $this->refBl = $refBl;
         $this->dateReception = $dateReception;
         $this->statut = $statut;
@@ -29,9 +29,9 @@ declare(strict_types=1);
         return $this->id;
     }
 
-    public function getFournisseurId(): int
+    public function getFournisseur(): Fournisseur
     {
-        return $this->fournisseurId;
+        return $this->fournisseur;
     }
 
     public function getRefBl(): string

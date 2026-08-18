@@ -5,21 +5,21 @@ declare(strict_types=1);
  class LigneCommande
 {
     private int $id;
-    private int $commandeId;
-    private int $produitId;
+    private Commande $commande;
+    private Produit $produit;
     private int $quantite;
     private float $prixUnitaire;
 
     public function __construct(
         int $id,
-        int $commandeId,
-        int $produitId,
+        Commande $commande,
+        Produit $produit,
         int $quantite,
         float $prixUnitaire
     ) {
         $this->id = $id;
-        $this->commandeId = $commandeId;
-        $this->produitId = $produitId;
+        $this->commande = $commande;
+        $this->produit = $produit;
         $this->quantite = $quantite;
         $this->prixUnitaire = $prixUnitaire;
     }
@@ -29,14 +29,14 @@ declare(strict_types=1);
         return $this->id;
     }
 
-    public function getCommandeId(): int
+    public function getCommande(): Commande
     {
-        return $this->commandeId;
+        return $this->commande;
     }
 
-    public function getProduitId(): int
+    public function getProduit(): Produit
     {
-        return $this->produitId;
+        return $this->produit;
     }
 
     public function getQuantite(): int

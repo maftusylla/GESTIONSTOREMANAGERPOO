@@ -5,20 +5,20 @@ declare(strict_types=1);
  class Paiement
 {
     private int $id;
-    private int $detteId;
+    private Dette $dette;
     private float $montant;
     private string $modePaiement;
     private DateTimeImmutable $datePaiement;
 
     public function __construct(
         int $id,
-        int $detteId,
+        Dette $dette,
         float $montant,
         string $modePaiement,
         DateTimeImmutable $datePaiement
     ) {
         $this->id = $id;
-        $this->detteId = $detteId;
+        $this->dette = $dette;
         $this->montant = $montant;
         $this->modePaiement = $modePaiement;
         $this->datePaiement = $datePaiement;
@@ -29,9 +29,9 @@ declare(strict_types=1);
         return $this->id;
     }
 
-    public function getDetteId(): int
+    public function getDette(): Dette
     {
-        return $this->detteId;
+        return $this->dette;
     }
 
     public function getMontant(): float

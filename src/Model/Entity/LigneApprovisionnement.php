@@ -5,23 +5,23 @@ declare(strict_types=1);
  class LigneApprovisionnement
 {
     private int $id;
-    private int $approvisionnementId;
-    private int $produitId;
+    private Approvisionnement $approvisionnement;
+    private Produit $produit;
     private int $quantiteCommandee;
     private int $quantiteLivree;
     private float $coutUnitaire;
 
     public function __construct(
         int $id,
-        int $approvisionnementId,
-        int $produitId,
+        Approvisionnement  $approvisionnement,
+        Produit $produit,
         int $quantiteCommandee,
         int $quantiteLivree,
         float $coutUnitaire
     ) {
         $this->id = $id;
-        $this->approvisionnementId = $approvisionnementId;
-        $this->produitId = $produitId;
+        $this->approvisionnement = $approvisionnement;
+        $this->produit = $produit;
         $this->quantiteCommandee = $quantiteCommandee;
         $this->quantiteLivree = $quantiteLivree;
         $this->coutUnitaire = $coutUnitaire;
@@ -32,14 +32,14 @@ declare(strict_types=1);
         return $this->id;
     }
 
-    public function getApprovisionnementId(): int
+    public function getApprovisionnement(): Approvisionnement
     {
-        return $this->approvisionnementId;
+        return $this->approvisionnement;
     }
 
-    public function getProduitId(): int
+    public function getProduit(): Produit
     {
-        return $this->produitId;
+        return $this->produit;
     }
 
     public function getQuantiteCommandee(): int

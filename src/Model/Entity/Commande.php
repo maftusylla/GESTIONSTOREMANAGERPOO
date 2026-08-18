@@ -5,7 +5,7 @@ declare(strict_types=1);
  class Commande
 {
     private int $id;
-    private int $clientId;
+    private Client $client;
     private DateTimeImmutable $dateCommande;
     private float $montantTotal;
     private float $montantVerse;
@@ -14,7 +14,7 @@ declare(strict_types=1);
 
     public function __construct(
         int $id,
-        int $clientId,
+        Client $client,
         DateTimeImmutable $dateCommande,
         float $montantTotal,
         float $montantVerse,
@@ -22,7 +22,7 @@ declare(strict_types=1);
         string $statut
     ) {
         $this->id = $id;
-        $this->clientId = $clientId;
+        $this->client = $client;
         $this->dateCommande = $dateCommande;
         $this->montantTotal = $montantTotal;
         $this->montantVerse = $montantVerse;
@@ -35,9 +35,9 @@ declare(strict_types=1);
         return $this->id;
     }
 
-    public function getClientId(): int
+    public function getClient(): Client
     {
-        return $this->clientId;
+        return $this->client;
     }
 
     public function getDateCommande(): DateTimeImmutable

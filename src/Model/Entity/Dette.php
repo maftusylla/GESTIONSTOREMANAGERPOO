@@ -5,7 +5,7 @@ declare(strict_types=1);
  class Dette
 {
     private int $id;
-    private int $commandeId;
+    private Commande $commande;
     private float $montantInitial;
     private float $montantRestant;
     private DateTimeImmutable $dateCreation;
@@ -13,14 +13,14 @@ declare(strict_types=1);
 
     public function __construct(
         int $id,
-        int $commandeId,
+        Commande $commande,
         float $montantInitial,
         float $montantRestant,
         DateTimeImmutable $dateCreation,
         string $statut
     ) {
         $this->id = $id;
-        $this->commandeId = $commandeId;
+        $this->commande = $commande;
         $this->montantInitial = $montantInitial;
         $this->montantRestant = $montantRestant;
         $this->dateCreation = $dateCreation;
@@ -32,9 +32,9 @@ declare(strict_types=1);
         return $this->id;
     }
 
-    public function getCommandeId(): int
+    public function getCommande(): Commande
     {
-        return $this->commandeId;
+        return $this->commande;
     }
 
     public function getMontantInitial(): float

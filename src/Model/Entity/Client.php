@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 class Client
 {
-    private int $id;
-    private string $prenom;
-    private string $nom;
-    private string $telephone;
-    private ?string $email;
-    private float $limiteCredit;
+    private  int $id;
+    private  string $prenom;
+    private  string $nom;
+    private  string $telephone;
+    private  ?string $email;
+    private  float $limiteCredit;
 
     public function __construct(
         int $id,
@@ -27,34 +27,34 @@ class Client
         $this->limiteCredit = $limiteCredit;
     }
 
-    public function getId(): int
+    public  function getId(): int
     {
-        return $this->id;
+        return this->id;
     }
 
-    public function getPrenom(): string
+    public  function getPrenom(): string
     {
-        return $this->prenom;
+        return this->prenom;
     }
 
-    public function getNom(): string
+    public  function getNom(): string
     {
-        return $this->nom;
+        return this->nom;
     }
 
-    public function getTelephone(): string
+    public  function getTelephone(): string
     {
-        return $this->telephone;
+        return this->telephone;
     }
 
-    public function getEmail(): ?string
+    public  function getEmail(): ?string
     {
-        return $this->email;
+        return this->email;
     }
 
-    public function getLimiteCredit(): float
+    public   function getLimiteCredit(): float
     {
-        return $this->limiteCredit;
+        return this-> limiteCredit;
     }
 
     public function peutObtenirCredit(
