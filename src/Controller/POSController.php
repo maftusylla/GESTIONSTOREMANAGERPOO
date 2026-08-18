@@ -132,7 +132,7 @@ class POSController
         foreach ($commandes as $commande) {
             $ventes[] = [
                 'commande' => $commande,
-                'client' => $this->clientRepository->findById($commande->getClientId()),
+                'client' => $this->clientRepository->findById($commande->getClient()),
                 'articles' => $this->commandeRepository->findLignesByCommande($commande->getId()),
             ];
         }

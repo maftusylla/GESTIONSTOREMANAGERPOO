@@ -109,7 +109,7 @@ declare(strict_types=1);
         return $resultat === false ? [] : $resultat;
     }
 
-    public function prepare(string $sql, array $datas = []): PDOStatement
+    private function prepare(string $sql, array $datas = []): PDOStatement
     {
         $statement = $this->pdo->prepare($sql);
         $statement->execute($datas);

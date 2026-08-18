@@ -1,24 +1,16 @@
 <?php
 
-
 declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/Core/Database.php';
 require_once dirname(__DIR__) . '/Model/Entity/Client.php';
 
-
 class ClientRepository
 {
-    private Database $db;
 
-    public function __construct()
+    public static function findById(int $id): ?Client
     {
-        $this->db = Database::getInstance();
-    }
-
-    public function findById(int $id): ?Client
-    {
-        $ligne = $this->db->executeQuery(
+        $ligne = Database::executeQuery(
             'SELECT id, prenom, nom, telephone, email, limite_credit FROM client WHERE id = :id',
             ['id' => $id]
         );
@@ -37,9 +29,9 @@ class ClientRepository
         );
     }
 
-    public function findAll(): array
+    public static function findAll(): array
     {
-        $lignes = $this->db->executeQuery(
+        $lignes = Database::executeQuery(
             'SELECT id, prenom, nom, telephone, email, limite_credit FROM client ORDER BY nom, prenom',
             [],
             false
@@ -61,9 +53,9 @@ class ClientRepository
         return $clients;
     }
 
-    public function calculerEncoursDettes(int $clientId): float
+    public static function calculerEncoursDettes(int $clientId): float
     {
-        $ligne = $this->db->executeQuery(
+        $ligne = Database::executeQuery(
             'SELECT COALESCE(SUM(d.montant_restant), 0) AS encours
              FROM dette d
              INNER JOIN commande c ON c.id = d.commande_id
@@ -73,6 +65,4 @@ class ClientRepository
 
         return (float) ($ligne['encours'] ?? 0);
     }
-
-    
 }

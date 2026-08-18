@@ -149,7 +149,7 @@ declare(strict_types=1);
                     <tr id="debt-row-<?= $dette->getId() ?>">
                         <td style="font-weight: 700; color: var(--text-muted);">
                             #DT-<?= $dette->getId() ?>
-                            <span style="font-size: 10px; display: block; font-weight: normal;">#CMD-<?= $dette->getCommandeId() ?></span>
+                            <span style="font-size: 10px; display: block; font-weight: normal;">#CMD-<?= $dette->getCommande() ?></span>
                         </td>
                         <td style="font-size: 12px;"><?= $dette->getDateCreation()->format('d M Y H:i') ?></td>
                         <td style="font-weight: 700;">
@@ -178,7 +178,7 @@ declare(strict_types=1);
                         <td colspan="8" style="padding: 0; border: none;">
 
                             <div class="details-drawer" id="debt-lines-<?= $dette->getId() ?>">
-                                <div style="font-weight: 700; font-size: 12px; color: var(--accent); margin-bottom: 8px;">Articles de la commande #CMD-<?= $dette->getCommandeId() ?> :</div>
+                                <div style="font-weight: 700; font-size: 12px; color: var(--accent); margin-bottom: 8px;">Articles de la commande #CMD-<?= $dette->getCommande() ?> :</div>
                                 <table class="debt-table" style="font-size: 11px;">
                                     <thead><tr><th>Produit</th><th>Quantité</th><th>Prix Unit.</th><th>Sous-total</th></tr></thead>
                                     <tbody>

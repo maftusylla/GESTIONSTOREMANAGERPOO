@@ -2,22 +2,16 @@
 
 declare(strict_types=1);
 
- 
 require_once dirname(__DIR__) . '/Core/Database.php';
 require_once dirname(__DIR__) . '/Model/Entity/Produit.php';
 
 class ProduitRepository
 {
-    private Database $db;
+   
 
-    public function __construct()
+    public static function findById(int $id): ?Produit
     {
-        $this->db = Database::getInstance();
-    }
-
-    public function findById(int $id): ?Produit
-    {
-        $ligne = $this->db->executeQuery(
+        $ligne = Database::executeQuery(
             'SELECT id, nom, prix_vente, quantite_stock FROM produit WHERE id = :id',
             ['id' => $id]
         );
@@ -26,7 +20,6 @@ class ProduitRepository
             return null;
         }
 
-        // Construction de l'objet Produit à partir du tableau $ligne
         return new Produit(
             (int) $ligne['id'],
             (string) $ligne['nom'],
@@ -35,9 +28,9 @@ class ProduitRepository
         );
     }
 
-    public function findAll(): array
+    public static function findAll(): array
     {
-        $lignes = $this->db->executeQuery(
+        $lignes = Database::executeQuery(
             'SELECT id, nom, prix_vente, quantite_stock FROM produit ORDER BY nom',
             [],
             false
@@ -46,7 +39,6 @@ class ProduitRepository
         $produits = [];
 
         foreach ($lignes as $ligne) {
-            // Même bloc de construction que dans findById() ci-dessus
             $produits[] = new Produit(
                 (int) $ligne['id'],
                 (string) $ligne['nom'],
@@ -58,9 +50,9 @@ class ProduitRepository
         return $produits;
     }
 
-    public function decrementerStock(int $produitId, int $quantite): int
+    public static function decrementerStock(int $produitId, int $quantite): int
     {
-        return $this->db->executeUpdate(
+        return Database::executeUpdate(
             'UPDATE produit
              SET quantite_stock = quantite_stock - :quantiteADecrementer
              WHERE id = :id AND quantite_stock >= :quantiteMinimale',
@@ -71,6 +63,4 @@ class ProduitRepository
             ]
         );
     }
-
-    
 }

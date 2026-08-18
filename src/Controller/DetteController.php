@@ -80,8 +80,8 @@ class DetteController
         $lignes = [];
 
         foreach ($dettes as $dette) {
-            $commande = $this->commandeRepository->findById($dette->getCommandeId());
-            $client = $commande !== null ? $this->clientRepository->findById($commande->getClientId()) : null;
+            $commande = $this->commandeRepository->findById($dette->getCommande());
+            $client = $commande !== null ? $this->clientRepository->findById($commande->getClient()) : null;
             $articles = $commande !== null
                 ? $this->commandeRepository->findLignesByCommande($commande->getId())
                 : [];

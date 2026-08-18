@@ -5,19 +5,14 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/Core/Database.php';
 require_once dirname(__DIR__) . '/Model/Entity/Dette.php';
 require_once dirname(__DIR__) . '/Model/Entity/Paiement.php';
+require_once dirname(__DIR__) . '/Repository/CommandeRepository.php';
 
 class DetteRepository
 {
-    private Database $db;
 
-    public function __construct()
+    public static function findById(int $id): ?Dette
     {
-        $this->db = Database::getInstance();
-    }
-
-    public function findById(int $id): ?Dette
-    {
-        $ligne = $this->db->executeQuery(
+        $ligne = Database::executeQuery(
             'SELECT id, commande_id, montant_initial, montant_restant, date_creation, statut
              FROM dette WHERE id = :id',
             ['id' => $id]
@@ -27,12 +22,12 @@ class DetteRepository
             return null;
         }
 
-        return $this->hydrater($ligne);
+        return self::hydrater($ligne);
     }
 
-    public function findAll(): array
+    public static function findAll(): array
     {
-        $lignes = $this->db->executeQuery(
+        $lignes = Database::executeQuery(
             'SELECT id, commande_id, montant_initial, montant_restant, date_creation, statut
              FROM dette ORDER BY date_creation DESC',
             [],
@@ -40,14 +35,14 @@ class DetteRepository
         );
 
         return array_map(
-            fn (array $ligne): Dette => $this->hydrater($ligne),
+            fn (array $ligne): Dette => self::hydrater($ligne),
             $lignes
         );
     }
 
-    public function findPaiementsByDette(int $detteId): array
+    public static function findPaiementsByDette(int $detteId): array
     {
-        $lignes = $this->db->executeQuery(
+        $lignes = Database::executeQuery(
             'SELECT id, dette_id, montant, mode_paiement, date_paiement
              FROM paiement WHERE dette_id = :detteId ORDER BY date_paiement DESC',
             ['detteId' => $detteId],
@@ -66,9 +61,9 @@ class DetteRepository
         );
     }
 
-    public function enregistrerPaiement(int $detteId, float $montant, string $modePaiement): int
+    public static function enregistrerPaiement(int $detteId, float $montant, string $modePaiement): int
     {
-        $this->db->executeUpdate(
+        Database::executeUpdate(
             'INSERT INTO paiement (dette_id, montant, mode_paiement)
              VALUES (:detteId, :montant, :modePaiement)',
             [
@@ -78,15 +73,15 @@ class DetteRepository
             ]
         );
 
-        return (int) $this->db->lastInsertId();
+        return (int) Database::lastInsertId();
     }
 
-    public function mettreAJourApresRemboursement(
+    public static function mettreAJourApresRemboursement(
         int $detteId,
         float $nouveauMontantRestant,
         string $nouveauStatut
     ): int {
-        return $this->db->executeUpdate(
+        return Database::executeUpdate(
             'UPDATE dette
              SET montant_restant = :montantRestant, statut = :statut
              WHERE id = :id',
@@ -97,29 +92,40 @@ class DetteRepository
             ]
         );
     }
-    public function sommeTotalPaiements(): float
+
+    public static function sommeTotalPaiements(): float
     {
-        $ligne = $this->db->executeQuery(
+        $ligne = Database::executeQuery(
             'SELECT COALESCE(SUM(montant), 0) AS total FROM paiement'
         );
 
         return (float) ($ligne['total'] ?? 0);
     }
 
-    public function sommeEncoursActif(): float
+    public static function sommeEncoursActif(): float
     {
-        $ligne = $this->db->executeQuery(
+        $ligne = Database::executeQuery(
             "SELECT COALESCE(SUM(montant_restant), 0) AS total FROM dette WHERE statut = 'NON SOLDEE'"
         );
 
         return (float) ($ligne['total'] ?? 0);
     }
 
-    private function hydrater(array $ligne): Dette
+    private static function hydrater(array $ligne): Dette
     {
+        // Dette attend désormais un vrai objet Commande (et non plus un int) :
+        // on va le chercher via CommandeRepository avant de construire la Dette.
+        $commande = CommandeRepository::findById((int) $ligne['commande_id']);
+
+        if ($commande === null) {
+            throw new RuntimeException(
+                'Dette #' . $ligne['id'] . ' référence une commande introuvable (id ' . $ligne['commande_id'] . ').'
+            );
+        }
+
         return new Dette(
             (int) $ligne['id'],
-            (int) $ligne['commande_id'],
+            $commande,
             (float) $ligne['montant_initial'],
             (float) $ligne['montant_restant'],
             new DateTimeImmutable((string) $ligne['date_creation']),

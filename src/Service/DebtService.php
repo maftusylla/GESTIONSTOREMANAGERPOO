@@ -60,7 +60,7 @@ class DebtService
 
             return new Dette(
                 $dette->getId(),
-                $dette->getCommandeId(),
+                $dette->getCommande(),
                 $dette->getMontantInitial(),
                 $nouveauMontantRestant,
                 $dette->getDateCreation(),

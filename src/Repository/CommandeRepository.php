@@ -5,24 +5,19 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/Core/Database.php';
 require_once dirname(__DIR__) . '/Model/Entity/Commande.php';
 require_once dirname(__DIR__) . '/Model/Entity/LigneCommande.php';
+require_once dirname(__DIR__) . '/Repository/ClientRepository.php';
 
 class CommandeRepository
 {
-    private Database $db;
-
-    public function __construct()
-    {
-        $this->db = Database::getInstance();
-    }
-
-    public function creerCommande(
+    
+    public static function creerCommande(
         int $clientId,
         float $montantTotal,
         float $montantVerse,
         string $modeReglement,
         string $statut
     ): int {
-        $this->db->executeUpdate(
+        Database::executeUpdate(
             'INSERT INTO commande
                 (client_id, montant_total, montant_verse, mode_reglement, statut)
              VALUES
@@ -36,16 +31,16 @@ class CommandeRepository
             ]
         );
 
-        return (int) $this->db->lastInsertId();
+        return (int) Database::lastInsertId();
     }
 
-    public function ajouterLigneCommande(
+    public static function ajouterLigneCommande(
         int $commandeId,
         int $produitId,
         int $quantite,
         float $prixUnitaire
     ): int {
-        $this->db->executeUpdate(
+        Database::executeUpdate(
             'INSERT INTO ligne_commande
                 (commande_id, produit_id, quantite, prix_unitaire)
              VALUES
@@ -58,12 +53,12 @@ class CommandeRepository
             ]
         );
 
-        return (int) $this->db->lastInsertId();
+        return (int) Database::lastInsertId();
     }
 
-    public function findById(int $id): ?Commande
+    public static function findById(int $id): ?Commande
     {
-        $ligne = $this->db->executeQuery(
+        $ligne = Database::executeQuery(
             'SELECT id, client_id, date_commande, montant_total, montant_verse, mode_reglement, statut
              FROM commande WHERE id = :id',
             ['id' => $id]
@@ -73,12 +68,12 @@ class CommandeRepository
             return null;
         }
 
-        return $this->hydrater($ligne);
+        return self::hydrater($ligne);
     }
 
-    public function findAll(): array
+    public static function findAll(): array
     {
-        $lignes = $this->db->executeQuery(
+        $lignes = Database::executeQuery(
             'SELECT id, client_id, date_commande, montant_total, montant_verse, mode_reglement, statut
              FROM commande ORDER BY date_commande DESC',
             [],
@@ -86,21 +81,23 @@ class CommandeRepository
         );
 
         return array_map(
-            fn (array $ligne): Commande => $this->hydrater($ligne),
+            fn (array $ligne): Commande => self::hydrater($ligne),
             $lignes
         );
     }
-    public function sommeTotalMontantVerse(): float
+
+    public static function sommeTotalMontantVerse(): float
     {
-        $ligne = $this->db->executeQuery(
+        $ligne = Database::executeQuery(
             'SELECT COALESCE(SUM(montant_verse), 0) AS total FROM commande'
         );
 
         return (float) ($ligne['total'] ?? 0);
     }
-    public function findLignesByCommande(int $commandeId): array
+
+    public static function findLignesByCommande(int $commandeId): array
     {
-        $lignes = $this->db->executeQuery(
+        $lignes = Database::executeQuery(
             'SELECT lc.id, lc.commande_id, lc.produit_id, lc.quantite, lc.prix_unitaire, p.nom AS produit_nom
              FROM ligne_commande lc
              INNER JOIN produit p ON p.id = lc.produit_id
@@ -112,11 +109,21 @@ class CommandeRepository
         return $lignes;
     }
 
-    private function hydrater(array $ligne): Commande
+    private static function hydrater(array $ligne): Commande
     {
+        // Commande attend désormais un vrai objet Client (et non plus un int) :
+        // on va le chercher via ClientRepository avant de construire la Commande.
+        $client = ClientRepository::findById((int) $ligne['client_id']);
+
+        if ($client === null) {
+            throw new RuntimeException(
+                'Commande #' . $ligne['id'] . ' référence un client introuvable (id ' . $ligne['client_id'] . ').'
+            );
+        }
+
         return new Commande(
             (int) $ligne['id'],
-            (int) $ligne['client_id'],
+            $client,
             new DateTimeImmutable((string) $ligne['date_commande']),
             (float) $ligne['montant_total'],
             (float) $ligne['montant_verse'],

@@ -7,16 +7,11 @@ require_once dirname(__DIR__) . '/Model/Entity/Fournisseur.php';
 
 class FournisseurRepository
 {
-    private Database $db;
+  
 
-    public function __construct()
+    public static function findById(int $id): ?Fournisseur
     {
-        $this->db = Database::getInstance();
-    }
-
-    public function findById(int $id): ?Fournisseur
-    {
-        $ligne = $this->db->executeQuery(
+        $ligne = Database::executeQuery(
             'SELECT id, nom, telephone, adresse, email FROM fournisseur WHERE id = :id',
             ['id' => $id]
         );
@@ -34,9 +29,9 @@ class FournisseurRepository
         );
     }
 
-    public function findAll(): array
+    public static function findAll(): array
     {
-        $lignes = $this->db->executeQuery(
+        $lignes = Database::executeQuery(
             'SELECT id, nom, telephone, adresse, email FROM fournisseur ORDER BY nom',
             [],
             false
@@ -56,6 +51,4 @@ class FournisseurRepository
 
         return $fournisseurs;
     }
-
-    
 }
